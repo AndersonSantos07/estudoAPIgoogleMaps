@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+
+
+    <!-- CARREGA A BIBLIOTECA DO JQUERY -->
+    <script src="https://code.jquery.com/jquery-3.7.0.js"
+        integrity="sha256-JlqSTELeR4TLqP0OG9dxM7yDPqX1ox/HfgiSLBj8+kM=" crossorigin="anonymous"></script>
+
+
+</head>
+
+<body>
+    <p id="demo">Clique no botão para obter sua localização:</p>
+    <button onclick="getLocation()">Clique aqui</button>
+    <div id="mapholder"></div>
+
+    <div class="block">
+        <b>Endereço:</b> <br>
+        <span id="end_completo"></span> <br><br>
+
+        <b>Rua:</b>
+        <span id="rua"></span> <br>
+
+        <b>Bairro:</b>
+        <span id="bairro"></span> <br>
+
+        <b>Cidade: </b>
+        <span id="cidade"></span> <br>
+
+        <b>Estado:</b>
+        <span id="estado"></span> <br>
+
+        <b>País:</b>
+        <span id="pais"></span> <br>
+
+        <br><br>
+    </div>
+
+    <!-- essa linha de código carrega a biblioteca js da api do google maps, na página -->
+    <script src="http://maps.google.com/maps/api/js?sensor=false"></script>
+    <script>
+        //pega o paragrafo do body(que vai conter o mapa)
+        var x = document.getElementById("demo");
+
+        //pega a geolocalização atual do usuário
+        function getLocation() {
+            //verifica se o navegador suporta a geolocalização
+            if (navigator.geolocation) {
+                //função da geolocation, para obter a posição atual
+                //caso suporte e de tudo certo na obtenção da posição, chama a função showPosition, caso não exibe uma mensagem da showError.
+                navigator.geolocation.getCurrentPosition(showPosition, showError);
+            }
+            //caso o navegador não suporte exibe uma mensagem.
+            else { x.innerHTML = "Geolocalização não é suportada nesse browser."; }
+        }
+
+        //função para obter a posição atual do usuário(caso de certo)
+        function showPosition(position) {
+
+            //latitude e longitude
+            lat = position.coords.latitude;
+            lon = position.coords.longitude;
+
+            //objeto instanciado com essas cordenadas obtidas pela geolocalização atual do usuário
+            latlon = new google.maps.LatLng(lat, lon)
+
+            //pega a div que vai conter o mapa
+            mapholder = document.getElementById('mapholder')
+
+            //define altura e largura da div
+            mapholder.style.height = '250px';
+            mapholder.style.width = '500px';
+
+
+            //definem as configurações do comportamento e aparência do mapa
+            //essas informações são usadas para mais tarde instanciar um objeto 'google.maps.Map' para exibir o mapa ao usuário.
+            var myOptions = {
+                center: latlon, // Define o centro do mapa para a posição armazenada em latlon (um objeto LatLng).
+                zoom: 14, // Define o nível de zoom inicial do mapa (quanto maior o valor, mais próximo o zoom).
+                mapTypeId: google.maps.MapTypeId.ROADMAP, // Define o tipo de mapa a ser exibido (ROADMAP exibe um mapa de ruas).
+                mapTypeControl: false, // Desativa o controle que permite ao usuário escolher o tipo de mapa (por exemplo, Mapa de Satélite, Mapa de Terreno).
+                navigationControlOptions: { style: google.maps.NavigationControlStyle.SMALL } // Define o estilo do controle de navegação no mapa.
+            };
+
+
+            //instanciando um objeto da classe 'google.maps.Map' e associando ao elemento html.
+            //com todas as informações(myOptions) de como o mapa será incorporado na página(elemento).
+            var map = new google.maps.Map(mapholder, myOptions);
+
+            //adiciona um marcador no mapa, na posição da lat e lon.
+            var marker = new google.maps.Marker({
+                position: latlon, // Define a posição do marcador usando o objeto LatLng armazenado em latlon.
+                map: map, // Associa o marcador ao mapa criado anteriormente.
+                title: "Você está Aqui!" // Define um título informativo que será exibido quando o usuário passar o mouse sobre o marcador.
+            });
+
+
+
+            //ENVIANDO AS INFORMAÇÕES DE LATITUDE E LONGITUDE PARA A FUNÇÃO!
+            geo(lat, lon)
+
+
+
+        }
+
+        function showError(error) {
+            switch (error.code) {
+                case error.PERMISSION_DENIED:
+                    // Se o usuário negar a solicitação de geolocalização.
+                    x.innerHTML = "Usuário rejeitou a solicitação de Geolocalização."
+                    break;
+                case error.POSITION_UNAVAILABLE:
+                    // Se a localização não estiver disponível.
+                    x.innerHTML = "Localização indisponível."
+                    break;
+                case error.TIMEOUT:
+                    // Se o tempo da requisição para obter a localização expirar.
+                    x.innerHTML = "O tempo da requisição expirou."
+                    break;
+                case error.UNKNOWN_ERROR:
+                    // Se ocorrer algum erro desconhecido.
+                    x.innerHTML = "Algum erro desconhecido aconteceu."
+                    break;
+            }
+
+        }
+    </script>
+
+</body>
+
+</html>
+
+
+<!-- CONSUMINDO A API NOMINATIM OPENSTREETMAP COM JQUERY E AJAX -->
+<script type="text/javascript">
+
+    function geo(latitude, longitude) {
+
+
+        function geo(latitude, longitude) {
+            // Faz uma solicitação JSON usando jQuery para a API do Nominatim OpenStreetMap
+            $.getJSON('https://nominatim.openstreetmap.org/reverse?format=json&lat=' + latitude + '&lon=' + longitude, function (res) {
+
+                //endereco completo
+                $('#end_completo').text(res.display_name);
+
+                //rua
+                $("#rua").text(res.address.road);
+
+                //bairro
+                $("#bairro").text(res.address.suburb);
+
+                //cidade
+                var cidade = res.address.city;
+
+                if (cidade == "" || cidade == null) {
+                    //TENTAR PEGAR POR TOWN
+                    cidade = res.address.town;
+
+                    if (cidade == "" || cidade == null) {
+                        cidade = res.address.village;
+                    }
+                }
+
+                //cidade
+                $("#cidade").text(cidade);
+
+                //PUXAR O ESTADO
+                $("#estado").text(res.address.state);
+
+                //PUXAR O PAIS
+                $("#pais").text(res.address.country);
+            });
+        }
+
+    };
+
+
+</script>
