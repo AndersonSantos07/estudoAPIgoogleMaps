@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Exemplo de Rota com Google Maps API</title>
+    <script src="https://maps.googleapis.com/maps/api/js?key=SuaChaveDeAPI&callback=initMap" async defer></script>
+    <script>
+        function initMap() {
+            // Coordenadas do ponto de origem e destino
+            var origem = { lat: -23.550520, lng: -46.633308 }; // Substitua com as coordenadas reais
+            var destino = { lat: -23.562436, lng: -46.654831 }; // Substitua com as coordenadas reais
+
+            // Cria um mapa centrado nas coordenadas de origem
+            var map = new google.maps.Map(document.getElementById('map'), {
+                center: origem,
+                zoom: 14
+            });
+
+            // Cria um marcador para o ponto de origem
+            var markerOrigem = new google.maps.Marker({
+                position: origem,
+                map: map,
+                title: 'Origem'
+            });
+
+            // Cria um marcador para o ponto de destino
+            var markerDestino = new google.maps.Marker({
+                position: destino,
+                map: map,
+                title: 'Destino'
+            });
+
+            // Cria uma solicitação de direção para a API do Google Maps
+            var directionsService = new google.maps.DirectionsService();
+            var directionsRenderer = new google.maps.DirectionsRenderer({ map: map });
+
+            var request = {
+                origin: origem,
+                destination: destino,
+                travelMode: 'DRIVING'
+            };
+
+            // Faz a solicitação da rota
+            directionsService.route(request, function(response, status) {
+                if (status == 'OK') {
+                    // Exibe a rota no mapa
+                    directionsRenderer.setDirections(response);
+                } else {
+                    console.error('Erro ao obter a rota: ' + status);
+                }
+            });
+        }
+    </script>
+</head>
+<body>
+    <div id="map" style="height: 400px;"></div>
+</body>
+</html>
